@@ -4,590 +4,163 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Поиск почтовых индексов - регионы и GeoJSON</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f5f5f5;
-            padding: 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #2c3e50;
-        }
-        
-        .tabs {
-            display: flex;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #ddd;
-        }
-        
-        .tab {
-            padding: 12px 20px;
-            cursor: pointer;
-            background: #f8f9fa;
-            border: 1px solid #ddd;
-            border-bottom: none;
-            border-radius: 5px 5px 0 0;
-            margin-right: 5px;
-        }
-        
-        .tab.active {
-            background: white;
-            border-bottom: 2px solid white;
-            margin-bottom: -2px;
-            font-weight: bold;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        
-        @media (max-width: 768px) {
-            .tab-content.active {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .input-section, .output-section {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        h2 {
-            margin-bottom: 15px;
-            color: #3498db;
-            font-size: 1.2rem;
-        }
-        
-        select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: inherit;
-            font-size: 14px;
-            margin-bottom: 15px;
-        }
-        
-        textarea {
-            min-height: 200px;
-            resize: vertical;
-        }
-        
-        button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            width: 100%;
-            transition: background-color 0.3s;
-        }
-        
-        button:hover {
-            background-color: #2980b9;
-        }
-        
-        button:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
-        }
-        
-        .status {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 4px;
-            text-align: center;
-        }
-        
-        .loading {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-        
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        #result {
-            white-space: pre-wrap;
-            font-family: monospace;
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            border: 1px solid #e9ecef;
-            min-height: 100px;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .info-box {
-            margin-top: 15px;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            border: 1px solid #e9ecef;
-            font-size: 14px;
-        }
-        
-        .example-link {
-            color: #3498db;
-            text-decoration: none;
-            cursor: pointer;
-            font-size: 14px;
-            display: inline-block;
-            margin-top: 10px;
-        }
-        
-        .example-link:hover {
-            text-decoration: underline;
-        }
-        
-        .region-stats {
-            margin-top: 15px;
-            padding: 10px;
-            background-color: #e8f4f8;
-            border-radius: 4px;
-            border: 1px solid #b8d8e8;
-        }
-    </style>
+    <link rel="stylesheet" href="index.css">
 </head>
 <body>
-    <h1>Поиск почтовых индексов по регионам России и GeoJSON</h1>
-    
-    <div class="tabs">
-        <div class="tab active" data-tab="geojson">По GeoJSON</div>
-        <div class="tab" data-tab="region">По региону России</div>
-        <div class="tab" data-tab="city">По городу</div>
+<h1>Поиск почтовых индексов по регионам России и GeoJSON</h1>
+
+<div class="tabs">
+    <div class="tab active" data-tab="geojson">По GeoJSON</div>
+    <div class="tab" data-tab="city">По городу или региону</div>
+    <div class="tab" data-tab="region">По региону России</div>
+</div>
+
+<div class="tab-content active" id="geojson-tab">
+    <div class="input-section">
+        <h2>Введите GeoJSON полигон:</h2>
+        <textarea id="geojsonInput" placeholder="Вставьте GeoJSON здесь..."></textarea>
+        <button id="processGeojsonButton">Найти почтовые индексы</button>
+
+        <div class="info-box">
+            <p>Формат: GeoJSON с полигоном в системе координат WGS84 (долгота, широта)</p>
+        </div>
+
+        <a class="example-link" id="insertExample">Вставить пример GeoJSON</a>
     </div>
-    
-    <div class="tab-content active" id="geojson-tab">
-        <div class="input-section">
-            <h2>Введите GeoJSON полигон:</h2>
-            <textarea id="geojsonInput" placeholder="Вставьте GeoJSON здесь..."></textarea>
-            <button id="processGeojsonButton">Найти почтовые индексы</button>
-            
-            <div class="info-box">
-                <p>Формат: GeoJSON с полигоном в системе координат WGS84 (долгота, широта)</p>
-            </div>
-            
-            <a class="example-link" id="insertExample">Вставить пример GeoJSON</a>
-        </div>
-        
-        <div class="output-section">
-            <h2>Результат:</h2>
-            <div id="geojsonStatus"></div>
-            <div id="geojsonResult"></div>
-        </div>
+
+    <div class="output-section">
+        <h2>Результат:</h2>
+        <div id="geojsonStatus"></div>
+        <div id="geojsonResult"></div>
     </div>
-    
-    <div class="tab-content" id="region-tab">
-        <div class="input-section">
-            <h2>Выберите регион России:</h2>
-<select id="regionSelect">
-    <option value="">-- Выберите регион --</option>
-    <option value="Республика Адыгея">Республика Адыгея</option>
-    <option value="Республика Алтай">Республика Алтай</option>
-    <option value="Республика Башкортостан">Республика Башкортостан</option>
-    <option value="Республика Бурятия">Республика Бурятия</option>
-    <option value="Республика Дагестан">Республика Дагестан</option>
-    <option value="Республика Ингушетия">Республика Ингушетия</option>
-    <option value="Кабардино-Балкарская Республика">Кабардино-Балкарская Республика</option>
-    <option value="Республика Калмыкия">Республика Калмыкия</option>
-    <option value="Республика Карачаево-Черкесия">Республика Карачаево-Черкесия</option>
-    <option value="Республика Карелия">Республика Карелия</option>
-    <option value="Республика Коми">Республика Коми</option>
-    <option value="Республика Крым">Республика Крым</option>
-    <option value="Республика Марий Эл">Республика Марий Эл</option>
-    <option value="Республика Мордовия">Республика Мордовия</option>
-    <option value="Республика Саха (Якутия)">Республика Саха (Якутия)</option>
-    <option value="Республика Северная Осетия - Алания">Республика Северная Осетия - Алания</option>
-    <option value="Республика Татарстан">Республика Татарстан</option>
-    <option value="Республика Тыва">Республика Тыва</option>
-    <option value="Удмуртская Республика">Удмуртская Республика</option>
-    <option value="Республика Хакасия">Республика Хакасия</option>
-    <option value="Чеченская Республика">Чеченская Республика</option>
-    <option value="Чувашская Республика">Чувашская Республика</option>
-    <option value="Алтайский край">Алтайский край</option>
-    <option value="Забайкальский край">Забайкальский край</option>
-    <option value="Камчатский край">Камчатский край</option>
-    <option value="Краснодарский край">Краснодарский край</option>
-    <option value="Красноярский край">Красноярский край</option>
-    <option value="Пермский край">Пермский край</option>
-    <option value="Приморский край">Приморский край</option>
-    <option value="Ставропольский край">Ставропольский край</option>
-    <option value="Хабаровский край">Хабаровский край</option>
-    <option value="Амурская область">Амурская область</option>
-    <option value="Архангельская область">Архангельская область</option>
-    <option value="Астраханская область">Астраханская область</option>
-    <option value="Белгородская область">Белгородская область</option>
-    <option value="Брянская область">Брянская область</option>
-    <option value="Владимирская область">Владимирская область</option>
-    <option value="Волгоградская область">Волгоградская область</option>
-    <option value="Вологодская область">Вологодская область</option>
-    <option value="Воронежская область">Воронежская область</option>
-    <option value="Ивановская область">Ивановская область</option>
-    <option value="Иркутская область">Иркутская область</option>
-    <option value="Калининградская область">Калининградская область</option>
-    <option value="Калужская область">Калужская область</option>
-    <option value="Кемеровская область">Кемеровская область</option>
-    <option value="Кировская область">Кировская область</option>
-    <option value="Костромская область">Костромская область</option>
-    <option value="Курганская область">Курганская область</option>
-    <option value="Курская область">Курская область</option>
-    <option value="Ленинградская область">Ленинградская область</option>
-    <option value="Липецкая область">Липецкая область</option>
-    <option value="Магаданская область">Магаданская область</option>
-    <option value="Московская область">Московская область</option>
-    <option value="Мурманская область">Мурманская область</option>
-    <option value="Нижегородская область">Нижегородская область</option>
-    <option value="Новгородская область">Новгородская область</option>
-    <option value="Новосибирская область">Новосибирская область</option>
-    <option value="Омская область">Омская область</option>
-    <option value="Оренбургская область">Оренбургская область</option>
-    <option value="Орловская область">Орловская область</option>
-    <option value="Пензенская область">Пензенская область</option>
-    <option value="Псковская область">Псковская область</option>
-    <option value="Ростовская область">Ростовская область</option>
-    <option value="Рязанская область">Рязанская область</option>
-    <option value="Самарская область">Самарская область</option>
-    <option value="Саратовская область">Саратовская область</option>
-    <option value="Сахалинская область">Сахалинская область</option>
-    <option value="Свердловская область">Свердловская область</option>
-    <option value="Смоленская область">Смоленская область</option>
-    <option value="Тамбовская область">Тамбовская область</option>
-    <option value="Тверская область">Тверская область</option>
-    <option value="Томская область">Томская область</option>
-    <option value="Тульская область">Тульская область</option>
-    <option value="Тюменская область">Тюменская область</option>
-    <option value="Ульяновская область">Ульяновская область</option>
-    <option value="Челябинская область">Челябинская область</option>
-    <option value="Ярославская область">Ярославская область</option>
-    <option value="Москва">Москва</option>
-    <option value="Санкт-Петербург">Санкт-Петербург</option>
-    <option value="Севастополь">Севастополь</option>
-    <option value="Еврейская автономная область">Еврейская автономная область</option>
-    <option value="Ненецкий автономный округ">Ненецкий автономный округ</option>
-    <option value="Ханты-Мансийский автономный округ - Югра">Ханты-Мансийский автономный округ - Югра</option>
-    <option value="Чукотский автономный округ">Чукотский автономный округ</option>
-    <option value="Ямало-Ненецкий автономный округ">Ямало-Ненецкий автономный округ</option>
-</select>
-            
-            <button id="processRegionButton">Найти почтовые индексы</button>
-            
-            <div class="info-box">
-                <p>Поиск почтовых индексов в выбранном регионе России</p>
-            </div>
-        </div>
-        
-        <div class="output-section">
-            <h2>Результат:</h2>
-            <div id="regionStatus"></div>
-            <div id="regionResult"></div>
-        </div>
-    </div>
-    
-    <div class="tab-content" id="city-tab">
-        <div class="input-section">
-            <h2>Введите название города:</h2>
-            <input type="text" id="cityInput" placeholder="Например: Москва, Санкт-Петербург..." style="width: 100%; padding: 12px; margin-bottom: 15px;">
-            
-            <button id="processCityButton">Найти почтовые индексы</button>
-            
-            <div class="info-box">
-                <p>Поиск почтовых индексов в указанном городе</p>
-            </div>
-        </div>
-        
-        <div class="output-section">
-            <h2>Результат:</h2>
-            <div id="cityStatus"></div>
-            <div id="cityResult"></div>
+</div>
+
+<div class="tab-content" id="region-tab">
+    <div class="input-section">
+        <h2>Выберите регион России:</h2>
+        <select id="regionSelect">
+            <option value="">-- Выберите регион --</option>
+            <option value="Адыгея">Республика Адыгея</option>
+            <option value="Алтай">Республика Алтай</option>
+            <option value="Башкортостан">Республика Башкортостан</option>
+            <option value="Бурятия">Республика Бурятия</option>
+            <option value="Дагестан">Республика Дагестан</option>
+            <option value="Ингушетия">Республика Ингушетия</option>
+            <option value="Кабардино-Балкарская Республика">Кабардино-Балкарская Республика</option>
+            <option value="Калмыкия">Республика Калмыкия</option>
+            <option value="Карачаево-Черкесия">Республика Карачаево-Черкесия</option>
+            <option value="Карелия">Республика Карелия</option>
+            <option value="Коми">Республика Коми</option>
+            <option value="Крым">Республика Крым</option>
+            <option value="Марий Эл">Республика Марий Эл</option>
+            <option value="Мордовия">Республика Мордовия</option>
+            <option value="Саха (Якутия)">Республика Саха (Якутия)</option>
+            <option value="Северная Осетия - Алания">Республика Северная Осетия - Алания</option>
+            <option value="Татарстан">Республика Татарстан</option>
+            <option value="Тыва">Республика Тыва</option>
+            <option value="Удмуртская Республика">Удмуртская Республика</option>
+            <option value="Хакасия">Республика Хакасия</option>
+            <option value="Чеченская Республика">Чеченская Республика</option>
+            <option value="Чувашская Республика">Чувашская Республика</option>
+            <option value="Алтайский край">Алтайский край</option>
+            <option value="Забайкальский край">Забайкальский край</option>
+            <option value="Камчатский край">Камчатский край</option>
+            <option value="Краснодарский край">Краснодарский край</option>
+            <option value="Красноярский край">Красноярский край</option>
+            <option value="Пермский край">Пермский край</option>
+            <option value="Приморский край">Приморский край</option>
+            <option value="Ставропольский край">Ставропольский край</option>
+            <option value="Хабаровский край">Хабаровский край</option>
+            <option value="Амурская область">Амурская область</option>
+            <option value="Архангельская область">Архангельская область</option>
+            <option value="Астраханская область">Астраханская область</option>
+            <option value="Белгородская область">Белгородская область</option>
+            <option value="Брянская область">Брянская область</option>
+            <option value="Владимирская область">Владимирская область</option>
+            <option value="Волгоградская область">Волгоградская область</option>
+            <option value="Вологодская область">Вологодская область</option>
+            <option value="Воронежская область">Воронежская область</option>
+            <option value="Ивановская область">Ивановская область</option>
+            <option value="Иркутская область">Иркутская область</option>
+            <option value="Калининградская область">Калининградская область</option>
+            <option value="Калужская область">Калужская область</option>
+            <option value="Кемеровская область">Кемеровская область</option>
+            <option value="Кировская область">Кировская область</option>
+            <option value="Костромская область">Костромская область</option>
+            <option value="Курганская область">Курганская область</option>
+            <option value="Курская область">Курская область</option>
+            <option value="Ленинградская область">Ленинградская область</option>
+            <option value="Липецкая область">Липецкая область</option>
+            <option value="Магаданская область">Магаданская область</option>
+            <option value="Московская область">Московская область</option>
+            <option value="Мурманская область">Мурманская область</option>
+            <option value="Нижегородская область">Нижегородская область</option>
+            <option value="Новгородская область">Новгородская область</option>
+            <option value="Новосибирская область">Новосибирская область</option>
+            <option value="Омская область">Омская область</option>
+            <option value="Оренбургская область">Оренбургская область</option>
+            <option value="Орловская область">Орловская область</option>
+            <option value="Пензенская область">Пензенская область</option>
+            <option value="Псковская область">Псковская область</option>
+            <option value="Ростовская область">Ростовская область</option>
+            <option value="Рязанская область">Рязанская область</option>
+            <option value="Самарская область">Самарская область</option>
+            <option value="Саратовская область">Саратовская область</option>
+            <option value="Сахалинская область">Сахалинская область</option>
+            <option value="Свердловская область">Свердловская область</option>
+            <option value="Смоленская область">Смоленская область</option>
+            <option value="Тамбовская область">Тамбовская область</option>
+            <option value="Тверская область">Тверская область</option>
+            <option value="Томская область">Томская область</option>
+            <option value="Тульская область">Тульская область</option>
+            <option value="Тюменская область">Тюменская область</option>
+            <option value="Ульяновская область">Ульяновская область</option>
+            <option value="Челябинская область">Челябинская область</option>
+            <option value="Ярославская область">Ярославская область</option>
+            <option value="Москва">Москва</option>
+            <option value="Санкт-Петербург">Санкт-Петербург</option>
+            <option value="Севастополь">Севастополь</option>
+            <option value="Еврейская автономная область">Еврейская автономная область</option>
+            <option value="Ненецкий автономный округ">Ненецкий автономный округ</option>
+            <option value="Ханты-Мансийский автономный округ - Югра">Ханты-Мансийский автономный округ - Югра</option>
+            <option value="Чукотский автономный округ">Чукотский автономный округ</option>
+            <option value="Ямало-Ненецкий автономный округ">Ямало-Ненецкий автономный округ</option>
+        </select>
+
+        <button id="processRegionButton">Найти почтовые индексы</button>
+
+        <div class="info-box">
+            <p>Поиск почтовых индексов в выбранном регионе России</p>
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Элементы для вкладки GeoJSON
-            const geojsonInput = document.getElementById('geojsonInput');
-            const processGeojsonButton = document.getElementById('processGeojsonButton');
-            const geojsonResultDiv = document.getElementById('geojsonResult');
-            const geojsonStatusDiv = document.getElementById('geojsonStatus');
-            
-            // Элементы для вкладки региона
-            const regionSelect = document.getElementById('regionSelect');
-            const processRegionButton = document.getElementById('processRegionButton');
-            const regionResultDiv = document.getElementById('regionResult');
-            const regionStatusDiv = document.getElementById('regionStatus');
-            
-            // Элементы для вкладки города
-            const cityInput = document.getElementById('cityInput');
-            const processCityButton = document.getElementById('processCityButton');
-            const cityResultDiv = document.getElementById('cityResult');
-            const cityStatusDiv = document.getElementById('cityStatus');
-            
-            // Управление вкладками
-            const tabs = document.querySelectorAll('.tab');
-            const tabContents = document.querySelectorAll('.tab-content');
-            
-            tabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const tabId = this.getAttribute('data-tab');
-                    
-                    // Деактивируем все вкладки
-                    tabs.forEach(t => t.classList.remove('active'));
-                    tabContents.forEach(tc => tc.classList.remove('active'));
-                    
-                    // Активируем текущую вкладку
-                    this.classList.add('active');
-                    document.getElementById(`${tabId}-tab`).classList.add('active');
-                });
-            });
-            
-            // Пример GeoJSON для вставки
-            const exampleGeoJson = `{
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "properties": {},
-      "geometry": {
-        "coordinates": [
-          [
-            [37.41932212390009, 55.87842920182371],
-            [37.391955541904764, 55.81377086577942],
-            [37.3754088395128, 55.72916741537614],
-            [37.488628294592274, 55.62774113661476],
-            [37.600302344700424, 55.57540258368866],
-            [37.775940698009435, 55.615178063848674],
-            [37.86038808042801, 55.68779586524562],
-            [37.91766520947655, 55.75798423132929],
-            [37.41932212390009, 55.87842920182371]
-          ]
-        ],
-        "type": "Polygon"
-      }
-    }
-  ]
-}`;
-            
-            // Вставка примера GeoJSON
-            document.getElementById('insertExample').addEventListener('click', function() {
-                geojsonInput.value = exampleGeoJson;
-            });
-            
-            // Обработка GeoJSON
-            processGeojsonButton.addEventListener('click', async function() {
-                await processGeoJSON(geojsonInput.value.trim(), geojsonResultDiv, geojsonStatusDiv, processGeojsonButton);
-            });
-            
-            // Обработка региона
-            processRegionButton.addEventListener('click', async function() {
-                const region = regionSelect.value;
-                if (!region) {
-                    showStatus(regionStatusDiv, 'Выберите регион', 'error');
-                    return;
-                }
-                
-                await processRegion(region, regionResultDiv, regionStatusDiv, processRegionButton);
-            });
-            
-            // Обработка города
-            processCityButton.addEventListener('click', async function() {
-                const city = cityInput.value.trim();
-                if (!city) {
-                    showStatus(cityStatusDiv, 'Введите название города', 'error');
-                    return;
-                }
-                
-                await processCity(city, cityResultDiv, cityStatusDiv, processCityButton);
-            });
-            
-            const SERVICE_REQUEST_URL = `https://maps.mail.ru/osm/tools/overpass/api/interpreter?data=`
+    <div class="output-section">
+        <h2>Результат:</h2>
+        <div id="regionStatus"></div>
+        <div id="regionResult"></div>
+    </div>
+</div>
 
-            // Функция обработки GeoJSON
-            async function processGeoJSON(geojsonText, resultDiv, statusDiv, button) {
-                if (!geojsonText) {
-                    showStatus(statusDiv, 'Пожалуйста, введите GeoJSON', 'error');
-                    return;
-                }
-                
-                try {
-                    const geoJson = JSON.parse(geojsonText);
-                    
-                    if (!geoJson.features || !geoJson.features[0] || 
-                        !geoJson.features[0].geometry || 
-                        geoJson.features[0].geometry.type !== 'Polygon' ||
-                        !geoJson.features[0].geometry.coordinates) {
-                        throw new Error('Неверный формат GeoJSON. Ожидается FeatureCollection с Polygon.');
-                    }
-                    
-                    showStatus(statusDiv, 'Обработка запроса...', 'loading');
-                    button.disabled = true;
-                    
-                    const coordinates = geoJson.features[0].geometry.coordinates[0];
-                    const overpassCoords = coordinates.map(coord => `${coord[1]} ${coord[0]}`).join(' ');
-                    
-                    const overpassQuery = `
-[out:json][timeout:30];
-(
-  node["addr:postcode"](poly:"${overpassCoords}");
-);
-out center;
-`;
-                    
-                    const response = await fetch(`${SERVICE_REQUEST_URL}${encodeURIComponent(overpassQuery)}`);
-                    
-                    if (!response.ok) {
-                        throw new Error(`Ошибка HTTP: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    const result = extractPostalCodes(data);
-                    
-                    displayResult(result, resultDiv, statusDiv, 'GeoJSON полигон');
-                    
-                } catch (error) {
-                    console.error('Ошибка:', error);
-                    resultDiv.textContent = `Ошибка: ${error.message}`;
-                    showStatus(statusDiv, 'Произошла ошибка', 'error');
-                } finally {
-                    button.disabled = false;
-                }
-            }
-            
-            // Функция обработки региона
-            async function processRegion(regionName, resultDiv, statusDiv, button) {
-                try {
-                    showStatus(statusDiv, `Поиск почтовых индексов в ${regionName}...`, 'loading');
-                    button.disabled = true;
-                    
-                    const overpassQuery = `
-[out:json][timeout:45];
-area[name="${regionName}"][admin_level=4]->.searchArea;
-(
-  node["addr:postcode"](area.searchArea);
-);
-out center;
-`;
-                    
-                    const response = await fetch(`${SERVICE_REQUEST_URL}${encodeURIComponent(overpassQuery)}`);
-                    
-                    if (!response.ok) {
-                        throw new Error(`Ошибка HTTP: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    const result = extractPostalCodes(data);
-                    
-                    displayResult(result, resultDiv, statusDiv, regionName);
-                    
-                } catch (error) {
-                    console.error('Ошибка:', error);
-                    resultDiv.textContent = `Ошибка: ${error.message}`;
-                    showStatus(statusDiv, 'Произошла ошибка', 'error');
-                } finally {
-                    button.disabled = false;
-                }
-            }
-            
-            // Функция обработки города
-            async function processCity(cityName, resultDiv, statusDiv, button) {
-                try {
-                    showStatus(statusDiv, `Поиск почтовых индексов в г. ${cityName}...`, 'loading');
-                    button.disabled = true;
-                    
-                    const overpassQuery = `
-[out:json][timeout:35];
-area[name="${cityName}"]->.searchArea;
-(
-  node["addr:postcode"](area.searchArea);
-);
-out center;
-`;
-                    
-                    const response = await fetch(`${SERVICE_REQUEST_URL}${encodeURIComponent(overpassQuery)}`);
-                    
-                    if (!response.ok) {
-                        throw new Error(`Ошибка HTTP: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    const result = extractPostalCodes(data);
-                    
-                    displayResult(result, resultDiv, statusDiv, `г. ${cityName}`);
-                    
-                } catch (error) {
-                    console.error('Ошибка:', error);
-                    resultDiv.textContent = `Ошибка: ${error.message}`;
-                    showStatus(statusDiv, 'Произошла ошибка', 'error');
-                } finally {
-                    button.disabled = false;
-                }
-            }
-            
-            // Функция извлечения почтовых индексов
-            function extractPostalCodes(data) {
-                const result = new Set();
-                for (const el of data.elements) {
-                    if (el?.tags && el.tags["addr:postcode"]) {
-                        result.add(el.tags["addr:postcode"]);
-                    }
-                }
-                return Array.from(result).sort();
-            }
-            
-            // Функция отображения результата
-            function displayResult(resultArray, resultDiv, statusDiv, sourceName) {
-                if (resultArray.length > 0) {
-                    resultDiv.textContent = JSON.stringify({ result: resultArray }, null, 2);
-                    showStatus(statusDiv, `Найдено ${resultArray.length} почтовых индексов в ${sourceName}`, 'success');
-                } else {
-                    resultDiv.textContent = "Почтовые индексы не найдены";
-                    showStatus(statusDiv, 'Почтовые индексы не найдены', 'error');
-                }
-            }
-            
-            // Функция для отображения статуса
-            function showStatus(statusDiv, message, type) {
-                statusDiv.textContent = message;
-                statusDiv.className = 'status';
-                if (type) {
-                    statusDiv.classList.add(type);
-                }
-            }
-        });
-    </script>
+<div class="tab-content" id="city-tab">
+    <div class="input-section">
+        <h2>Введите название города или региона:</h2>
+        <input type="text" id="cityInput" placeholder="Например: Москва, Санкт-Петербург, Адыгея, Бурятия..."
+               style="width: 100%; padding: 12px; margin-bottom: 15px;">
+
+        <button id="processCityButton">Найти почтовые индексы</button>
+
+        <div class="info-box">
+            <p>Поиск почтовых индексов в указанном городе или регионе</p>
+        </div>
+    </div>
+
+    <div class="output-section">
+        <h2>Результат:</h2>
+        <div id="cityStatus"></div>
+        <div id="cityResult"></div>
+    </div>
+</div>
+
+<script src="index.js"></script>
 </body>
 </html>
