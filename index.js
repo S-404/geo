@@ -23,6 +23,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const tabs = document.querySelectorAll('.tab');
   const tabContents = document.querySelectorAll('.tab-content');
 
+  const copyButtons = document.querySelectorAll('.copy-btn');
+
   tabs.forEach(tab => {
     tab.addEventListener('click', function () {
       const tabId = this.getAttribute('data-tab');
@@ -152,6 +154,37 @@ document.addEventListener('DOMContentLoaded', function () {
     } finally {
       button.disabled = false;
     }
+  }
+
+  // Обработка кнопок копирования
+  copyButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const targetId = this.getAttribute('data-target');
+      const targetElement = document.getElementById(targetId);
+      const textToCopy = targetElement.textContent;
+
+      copyToClipboard(textToCopy, this);
+    });
+  });
+
+  // Функция копирования в буфер обмена
+  function copyToClipboard(text, button) {
+    navigator.clipboard.writeText(text).then(() => {
+      // Визуальная обратная связь
+      const originalText = button.textContent;
+      button.textContent = text?.length ? 'Скопировано!' : 'Нет данных';
+      // console.log(originalText)
+      button.classList.add('copied');
+
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove('copied');
+      }, 2000);
+
+    }).catch(err => {
+      console.error('Ошибка при копировании: ', err);
+      alert('Не удалось скопировать текст. Попробуйте выделить и скопировать вручную.');
+    });
   }
 
   function prepareQuery(regionName){
